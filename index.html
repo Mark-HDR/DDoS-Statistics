@@ -43,6 +43,14 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
+      /* Styling for the total requests text */
+      #total-requests {
+        margin-top: 1em;
+        color: #555;
+        font-size: 1.1rem;
+        text-align: center;
+      }
+
       /* Styling for the copy button */
       #copy-btn {
         padding: 10px 16px;
@@ -123,6 +131,7 @@
     <div id="chart-container">
       <div id="chart"></div>
     </div>
+    <p id="total-requests">Total requests in the last 24 hours: 0</p>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
@@ -130,8 +139,10 @@
       window.onload = () => {
         let info = document.getElementById("info");
         let copyBtn = document.getElementById("copy-btn");
+        let totalRequestsElement = document.getElementById("total-requests");
 
-        let hostUrl = location.host + "/dstat";
+        // Add https:// before the URL
+        let hostUrl = "https://" + location.host + "/dstat";
         info.innerText = "Capturing requests from " + hostUrl;
 
         copyBtn.addEventListener("click", () => {
@@ -139,6 +150,9 @@
             alert("URL copied to clipboard!");
           });
         });
+
+        let totalRequests = 0;
+        let requestsData = [];
 
         let chart = Highcharts.chart("chart", {
           exporting: {
@@ -181,6 +195,17 @@
             true,
             chart.series[0].points.length > 60
           );
+
+          // Add the request to the data array
+          requestsData.push({ time, requests });
+
+          // Filter out data older than 24 hours
+          let oneDayAgo = new Date().getTime() - 24 * 60 * 60 * 1000;
+          requestsData = requestsData.filter((entry) => entry.time >= oneDayAgo);
+
+          // Update total requests in the last 24 hours
+          totalRequests = requestsData.reduce((sum, entry) => sum + entry.requests, 0);
+          totalRequestsElement.innerText = "Total requests in the last 24 hours: " + totalRequests;
         };
       };
     </script>
